@@ -5,7 +5,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import kornia
 from torchvision.models.vgg import vgg11
-from multiview_detector.models.resnet import resnet18
+from multiview_detector.models.resnet import resnet18, resnet34
 
 import matplotlib.pyplot as plt
 
@@ -33,18 +33,16 @@ class PerspTransDetector(nn.Module):
             base = vgg11().features
             base[-1] = nn.Sequential()
             base[-4] = nn.Sequential()
-            split = 10
-            self.base_pt1 = base[:split].to('cuda:1')
-            self.base_pt2 = base[split:].to('cuda:0')
+            self.base = base.to('cuda:0')
             out_channel = 512
         elif arch == 'resnet18':
-            base = nn.Sequential(*list(resnet18(replace_stride_with_dilation=[False, True, True]).children())[:-2])
-            split = 7
-            self.base_pt1 = base[:split].to('cuda:1')
-            self.base_pt2 = base[split:].to('cuda:0')
+            self.base = nn.Sequential(*list(resnet18(replace_stride_with_dilation=[False, True, True]).children())[:-2]).to('cuda:0')
+            out_channel = 512
+        elif arch == 'resnet34':
+            self.base = nn.Sequential(*list(resnet34(replace_stride_with_dilation=[False, True, True]).children())[:-2]).to('cuda:0')
             out_channel = 512
         else:
-            raise Exception('architecture currently support [vgg11, resnet18]')
+            raise Exception('architecture currently support [vgg11, resnet18, resnet34]')
         # 2.5cm -> 0.5m: 20x
         self.img_classifier = nn.Sequential(nn.Conv2d(out_channel, 64, 1), nn.ReLU(),
                                             nn.Conv2d(64, 2, 1, bias=False)).to('cuda:0')
@@ -60,13 +58,16 @@ class PerspTransDetector(nn.Module):
         world_features = []
         imgs_result = []
         for cam in range(self.num_cam):
-            img_feature = self.base_pt1(imgs[:, cam].to('cuda:1'))
-            img_feature = self.base_pt2(img_feature.to('cuda:0'))
+            img_feature = self.base(imgs[:, cam].to('cuda:0'))
             img_feature = F.interpolate(img_feature, self.upsample_shape, mode='bilinear')
             img_res = self.img_classifier(img_feature.to('cuda:0'))
             imgs_result.append(img_res)
             proj_mat = self.proj_mats[cam].repeat([B, 1, 1]).float().to('cuda:0')
-            world_feature = kornia.warp_perspective(img_feature.to('cuda:0'), proj_mat, self.reducedgrid_shape)
+            
+            # replace the code that is not current, with a current one
+            # world_feature = kornia.warp_perspective(img_feature.to('cuda:0'), proj_mat, self.reducedgrid_shape)
+            world_feature = kornia.geometry.transform.warp_perspective(img_feature.to('cuda:0'), proj_mat, self.reducedgrid_shape)
+
             if visualize:
                 plt.imshow(torch.norm(img_feature[0].detach(), dim=0).cpu().numpy())
                 plt.show()
@@ -122,7 +123,7 @@ def test():
     transform = T.Compose([T.Resize([720, 1280]),  # H,W
                            T.ToTensor(),
                            T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
-    dataset = frameDataset(Wildtrack(os.path.expanduser('~/Data/Wildtrack')), transform=transform)
+    dataset = frameDataset(Wildtrack(os.path.expanduser('.\\Wildtrack_dataset')), transform=transform)
     dataloader = DataLoader(dataset, 1, False, num_workers=0)
     imgs, map_gt, imgs_gt, frame = next(iter(dataloader))
     model = PerspTransDetector(dataset)

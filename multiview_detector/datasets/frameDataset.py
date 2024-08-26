@@ -11,7 +11,7 @@ from multiview_detector.utils.projection import *
 
 class frameDataset(VisionDataset):
     def __init__(self, base, train=True, transform=ToTensor(), target_transform=ToTensor(),
-                 reID=False, grid_reduce=4, img_reduce=4, train_ratio=0.9, force_download=True):
+                 reID=False, grid_reduce=4, img_reduce=4, train_ratio=0.25, test_ratio=0.05, force_download=True):
         super().__init__(base.root, transform=transform, target_transform=target_transform)
 
         map_sigma, map_kernel_size = 20 / grid_reduce, 20
@@ -26,7 +26,7 @@ class frameDataset(VisionDataset):
         if train:
             frame_range = range(0, int(self.num_frame * train_ratio))
         else:
-            frame_range = range(int(self.num_frame * train_ratio), self.num_frame)
+            frame_range = range(int(self.num_frame * train_ratio), int(self.num_frame * (train_ratio + test_ratio)))
 
         self.img_fpaths = self.base.get_image_fpaths(frame_range)
         self.map_gt = {}

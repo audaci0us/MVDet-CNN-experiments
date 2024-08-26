@@ -125,3 +125,7 @@ dmypy.json
 .pyre/
 
 .idea
+
+# repo specific exclusions
+Wildtrack_dataset/
+logs/

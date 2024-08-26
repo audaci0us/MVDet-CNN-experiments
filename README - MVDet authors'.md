@@ -1,4 +1,4 @@
-My personal experiments on CNN behind "Multiview Detection with Feature Perspective Transformation" [[Website](https://hou-yz.github.io/publication/2020-eccv2020-mvdet)] [[arXiv](https://arxiv.org/abs/2007.07247)]
+# Multiview Detection with Feature Perspective Transformation [[Website](https://hou-yz.github.io/publication/2020-eccv2020-mvdet)] [[arXiv](https://arxiv.org/abs/2007.07247)]
 
 ```
 @inproceedings{hou2020multiview,
@@ -9,7 +9,7 @@ My personal experiments on CNN behind "Multiview Detection with Feature Perspect
 }
 ```
 
-
+Please visit [link](https://github.com/hou-yz/MVDeTr) for our new work MVDeTr, a transformer-powered multiview detector that achieves new state-of-the-art!
 
 ## Overview
 We release the PyTorch code for **MVDet**, a state-of-the-art multiview pedestrian detector; and **MultiviewX** dataset, a novel synthetic multiview pedestrian detection datatset.

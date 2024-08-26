@@ -23,6 +23,33 @@ from multiview_detector.utils.image_utils import img_color_denormalize
 from multiview_detector.trainer import PerspectiveTrainer
 
 
+# replacing argparse-based parameters to class-based ones in order to run as a script conveniently
+class Args:
+    def __init__(self):
+        self.reID = True
+        self.cls_thres= 0.4
+        self.alpha = 1.0           # ratio for per view loss
+        self.variant = 'default'   # choices=['default', 'img_proj', 'res_proj', 'no_joint_conv']
+        self.arch = 'resnet34'     # choices=['vgg11', 'resnet18', 'resnet34']
+        self.dataset = 'wildtrack' # choices=['wildtrack', 'multiviewx']
+        self.num_workers = 4
+        self.batch_size = 1        # input batch size for training (default: 1)
+        self.epochs = 2            # input batch size for training (default: 1)
+        self.N = 3                 # input batch size for training (default: 1)
+        self.lr = 0.1              # learning rate (default: 0.1)
+        self.LR = 0.1              # learning rate (default: 0.1)
+        self.weight_decay = 5e-4
+        self.momentum = 0.5        # SGD momentum (default: 0.5)
+        self.M = 0.5               # SGD momentum (default: 0.5)
+        self.log_interval = 10     # how many batches to wait before logging training status
+        self.resume = None
+        self.visualize = True
+        self.seed = 1              # random seed (default: None);  not sure why the seed is not defaulted as None; going with as it is for now
+
+args = Args()
+    
+
+
 def main(args):
     # seed
     if args.seed is not None:
@@ -39,15 +66,15 @@ def main(args):
     denormalize = img_color_denormalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
     train_trans = T.Compose([T.Resize([720, 1280]), T.ToTensor(), normalize, ])
     if 'wildtrack' in args.dataset:
-        data_path = os.path.expanduser('~/Data/Wildtrack')
+        data_path = os.path.expanduser('.\\Wildtrack_dataset')
         base = Wildtrack(data_path)
-    elif 'multiviewx' in args.dataset:
-        data_path = os.path.expanduser('~/Data/MultiviewX')
-        base = MultiviewX(data_path)
+    # elif 'multiviewx' in args.dataset:
+    #     data_path = os.path.expanduser('~/Data/MultiviewX')
+    #     base = MultiviewX(data_path)
     else:
         raise Exception('must choose from [wildtrack, multiviewx]')
-    train_set = frameDataset(base, train=True, transform=train_trans, grid_reduce=4)
-    test_set = frameDataset(base, train=False, transform=train_trans, grid_reduce=4)
+    train_set = frameDataset(base, train=True, transform=train_trans, grid_reduce=4, train_ratio=0.25, test_ratio=0.05)
+    test_set = frameDataset(base, train=False, transform=train_trans, grid_reduce=4, train_ratio=0.25, test_ratio=0.05)
 
     train_loader = torch.utils.data.DataLoader(train_set, batch_size=args.batch_size, shuffle=True,
                                                num_workers=args.num_workers, pin_memory=True)
@@ -128,28 +155,6 @@ def main(args):
     trainer.test(test_loader, os.path.join(logdir, 'test.txt'), train_set.gt_fpath, True)
 
 
-if __name__ == '__main__':
-    # settings
-    parser = argparse.ArgumentParser(description='Multiview detector')
-    parser.add_argument('--reID', action='store_true')
-    parser.add_argument('--cls_thres', type=float, default=0.4)
-    parser.add_argument('--alpha', type=float, default=1.0, help='ratio for per view loss')
-    parser.add_argument('--variant', type=str, default='default',
-                        choices=['default', 'img_proj', 'res_proj', 'no_joint_conv'])
-    parser.add_argument('--arch', type=str, default='resnet18', choices=['vgg11', 'resnet18'])
-    parser.add_argument('-d', '--dataset', type=str, default='wildtrack', choices=['wildtrack', 'multiviewx'])
-    parser.add_argument('-j', '--num_workers', type=int, default=4)
-    parser.add_argument('-b', '--batch_size', type=int, default=1, metavar='N',
-                        help='input batch size for training (default: 1)')
-    parser.add_argument('--epochs', type=int, default=10, metavar='N', help='number of epochs to train (default: 10)')
-    parser.add_argument('--lr', type=float, default=0.1, metavar='LR', help='learning rate (default: 0.1)')
-    parser.add_argument('--weight_decay', type=float, default=5e-4)
-    parser.add_argument('--momentum', type=float, default=0.5, metavar='M', help='SGD momentum (default: 0.5)')
-    parser.add_argument('--log_interval', type=int, default=10, metavar='N',
-                        help='how many batches to wait before logging training status')
-    parser.add_argument('--resume', type=str, default=None)
-    parser.add_argument('--visualize', action='store_true')
-    parser.add_argument('--seed', type=int, default=1, help='random seed (default: None)')
-    args = parser.parse_args()
-
+if __name__ == '__main__':   
+    torch.cuda.empty_cache()
     main(args)
