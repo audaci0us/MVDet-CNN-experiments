@@ -12,47 +12,28 @@ My personal experiments on CNN behind "Multiview Detection with Feature Perspect
 
 
 ## Overview
-We release the PyTorch code for **MVDet**, a state-of-the-art multiview pedestrian detector; and **MultiviewX** dataset, a novel synthetic multiview pedestrian detection datatset.
+This repo is for my practice and trials in learning Convolutional Neural Networks. The changes carried out are probably simple ones. The primary goal here is to get familiar with a code base that's a good implementation of a Neural Network architecture.
 
-Wildtrack             |  MultiviewX
-:-------------------------:|:-------------------------:
-![alt text](https://hou-yz.github.io/images/eccv2020_mvdet_wildtrack_demo.gif "Detection results on Wildtrack dataset")  |  ![alt text](https://hou-yz.github.io/images/eccv2020_mvdet_multiviewx_demo.gif "Detection results on MultiviewX dataset")
+Here I'm focusing on MVDet model, which has been described and analyzed in the paper linked at the top. I got my understandings by reading through this paper (still learning from it) and also by going through the code that the paper's authors provided (this repo is a fork of theirs). 
+With the intention of learning, I'm trying out different things here. Hoping to document enough of the learnings! We'll see!
 
  
 ## Content
-- [MultiviewX dataset](#multiviewx-dataset)
-    * [Download MultiviewX](#download-multiviewx)
-    * [Build your own version](#build-your-own-version)
-- [MVDet Code](#mvdet-code)
-    * [Dependencies](#dependencies)
-    * [Data Preparation](#data-preparation)
-    * [Training](#training)
+- [Original setup](#original-setup)
+- [Experiment 1](#experimen-1)
+    * [Trials attempted in exp 1](#trials-attempted-in-exp-1)
+    * [Changes carried out in exp 1](#changes-carried-out-in-exp-1)
+- [Experiment 2](#experiment-2)
+    * [Trials attempted in exp 2](#trials-attempted-in-exp-2)
+    * [Changes carried out in exp 2](#changes-carried-out-in-exp-2)
 
 
-
-## MultiviewX dataset
-Using pedestrian models from [PersonX](https://github.com/sxzrt/Dissecting-Person-Re-ID-from-the-Viewpoint-of-Viewpoint), in Unity, we build a novel synthetic dataset **MultiviewX**. 
-
-![alt text](https://hou-yz.github.io/images/eccv2020_mvdet_multiviewx_dataset.jpg "Visualization of MultiviewX dataset")
-
-MultiviewX dataset covers a square of 16 meters by 25 meters. We quantize the ground plane into a 640x1000 grid. There are 6 cameras with overlapping field-of-view in MultiviewX dataset, each of which outputs a 1080x1920 resolution image. We also generate annotations for 400 frames in MultiviewX at 2 fps (same as Wildtrack). On average, 4.41 cameras are covering the same location. 
-
-### Download MultiviewX
-Please refer to this [link](https://1drv.ms/u/s!AtzsQybTubHfhYZ9Ghhahbp20OX9kA?e=Hm9Xdg) for download.
-
-### Build your own version
-Please refer to this [repo](https://github.com/hou-yz/MultiviewX) for a detailed guide & toolkits you might need.
-
-
-
-
-## MVDet Code
-This repo is dedicated to the code for **MVDet**. 
-
+## Original setup
+The original architecture of MVDet is given below.
 ![alt text](https://hou-yz.github.io/images/eccv2020_mvdet_architecture.png "Architecture for MVDet")
 
-### Dependencies
-This code uses the following libraries
+
+Their code implementation (and also my modified ones) of MVDet uses CUDA as well as the following libraries
 - python 3.7+
 - pytorch 1.4+ & tochvision
 - numpy
@@ -62,24 +43,32 @@ This code uses the following libraries
 - kornia
 - matlab & matlabengine (required for evaluation) (see this [link](/multiview_detector/evaluation/README.md) for detailed guide)
 
-### Data Preparation
-By default, all datasets are in `~/Data/`. We use [MultiviewX](#multiviewx-dataset) and [Wildtrack](https://www.epfl.ch/labs/cvlab/data/data-wildtrack/) in this project. 
 
-Your `~/Data/` folder should look like this
-```
-Data
-├── MultiviewX/
-│   └── ...
-└── Wildtrack/ 
-    └── ...
-```
 
-### Training
-In order to train classifiers, please run the following,
-```shell script
-CUDA_VISIBLE_DEVICES=0,1 python main.py -d wildtrack
-``` 
-This should automatically return evaluation results similar to the reported 88.2\% MODA on Wildtrack dataset. 
+## Experiment 1
+This experiment is only to get some basic familiarity with the code logics.
 
-### Pre-trained models
-You can download the checkpoints at this [link](https://1drv.ms/u/s!AtzsQybTubHfhNRE9Iy8IjsGMXB17A?e=CCqhIQ).
+### Trials attempted in exp 1
+1. Importantly, MVDet uses a Resnet18 architecture as its model-core. I've modified the code to use Resnet34 instead.
+2. Some setup related changes have been carried out in order to run the code in my Windows desktop with one GPU instead of 2 GPUs as run by the paper's authors.
+3. Also, minor changes are done to the main script where the parameters are explicitly hard-coded (this is for my convenience).
+
+### Changes carried out in exp 1
+1. "persp_trans_detector.py" script has a "PerspTransDetector" class. In its constructor (`__init__` method), Resnet34 is added as an additional option.
+2. In the same script, the `__init__` method and the `forward` method, both establish the device in which the model stays and the data gets loaded onto.
+   - The original implementation splits the model between two GPUs. I remove that portion and instead put the whole model into the single available GPU (in `__init__` method).
+   - Then, the data before it gets put through the model (in the `forward` method), it is loaded into GPU. Since the original model is split, this happens multiple times for the dataset. At those instances, they are just loaded into the same GPU.
+3. In the "main.py" script, the argparse library is used to apply the parameters. I've modified to use a simple class with properties instead. This is just for my convenience.
+
+
+
+
+## Experiment 2
+This one is a work in progress. Will be committing the changes soon. I've tried to modify the architecture to add an additional model in between the single-view results and the multi-view aggregation layers. These modifications will primarily be in "res_proj_variant". Hoping to complete them soon and commit them here. Fingers crossed!!
+![alt text](https://hou-yz.github.io/images/eccv2020_mvdet_architecture.png "Architecture for MVDet")
+
+### Trials attempted in exp 2
+\*\*\* Work in progress \*\*\*
+
+### Changes carried out in exp 2
+\*\*\* Work in progress \*\*\*
