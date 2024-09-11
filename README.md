@@ -72,7 +72,7 @@ This one is a work in progress. Will be committing the changes soon. I've tried 
 
 ### Trials attempted in exp 2
 1. The existing architecture has multiple variants. One such variant passes the result of the single-view detection, on to the next steps instead of the feature mappings. Refer image below where the red-line highlights the alternative path in this variant. I've modified the CNN model (CNN block highlighted in red as well) used in this alternate pathway here. The idea was to understand what it takes to integrate other single-view CNN models into this architecture.
-![alt text](./models/MVDet - modified architecture - exp2.png "Modified Architecture for MVDet")
+![alt text](./multiview_detector/models/MVDet - modified architecture - exp2.png "Modified Architecture for MVDet")
 
 ### Changes carried out in exp 2
 1. The model definition in the `__init__` method of the `ResProjVariant` class in the "res_proj_variant.py" script was modified. The `self.image_classifier` property was modified to include an additional resnet18 CNN block in its middle.
