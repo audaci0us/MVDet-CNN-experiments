@@ -40,16 +40,14 @@ class ResProjVariant(nn.Module):
             self.base_pt2 = base[split:].to('cuda:0')
             out_channel = 512
         elif arch == 'resnet18':
-            base = nn.Sequential(*list(resnet18(replace_stride_with_dilation=[False, True, True]).children())[:-2])
-            split = 7
-            self.base_pt1 = base[:split].to('cuda:1')
-            self.base_pt2 = base[split:].to('cuda:0')
+            self.base = nn.Sequential(*list(resnet18(replace_stride_with_dilation=[False, True, True]).children())[:-2]).to('cuda:0')
             out_channel = 512
         else:
             raise Exception('architecture currently support [vgg11, resnet18]')
         # 2.5cm -> 0.5m: 20x
-        self.img_classifier = nn.Sequential(nn.Conv2d(out_channel, 64, 1), nn.ReLU(),
-                                            nn.Conv2d(64, 2, 1, bias=False)).to('cuda:0')
+        self.img_classifier = nn.Sequential(nn.Conv2d(in_channels=512, out_channels=3, kernel_size=1 ),
+                                            *list(resnet18(replace_stride_with_dilation=[False, True, True]).children())[:-2],
+                                            nn.Conv2d(in_channels=512, out_channels=2, kernel_size=1, bias=False)).to('cuda:0')
         self.map_classifier = nn.Sequential(nn.Conv2d(self.num_cam + 2, 512, 3, padding=1), nn.ReLU(),
                                             # nn.Conv2d(512, 512, 5, 1, 2), nn.ReLU(),
                                             nn.Conv2d(512, 512, 3, padding=2, dilation=2), nn.ReLU(),
@@ -62,14 +60,13 @@ class ResProjVariant(nn.Module):
         world_features = []
         imgs_result = []
         for cam in range(self.num_cam):
-            img_feature = self.base_pt1(imgs[:, cam].to('cuda:1'))
-            img_feature = self.base_pt2(img_feature.to('cuda:0'))
+            img_feature = self.base(imgs[:, cam].to('cuda:0'))
             img_feature = F.interpolate(img_feature, self.upsample_shape, mode='bilinear')
             img_res = self.img_classifier(img_feature.to('cuda:0'))
             imgs_result.append(img_res)
             proj_mat = self.proj_mats[cam].repeat([B, 1, 1]).float().to('cuda:0')
             # head, *foot*
-            world_feature = kornia.warp_perspective(img_res[:, 1].unsqueeze(1).to('cuda:0'), proj_mat,
+            world_feature = kornia.geometry.transform.warp_perspective(img_res[:, 1].unsqueeze(1).to('cuda:0'), proj_mat,
                                                     self.reducedgrid_shape)
             if visualize:
                 plt.imshow(img_res[0, 0].detach().cpu().numpy())

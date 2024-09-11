@@ -29,8 +29,8 @@ class Args:
         self.reID = True
         self.cls_thres= 0.4
         self.alpha = 1.0           # ratio for per view loss
-        self.variant = 'default'   # choices=['default', 'img_proj', 'res_proj', 'no_joint_conv']
-        self.arch = 'resnet34'     # choices=['vgg11', 'resnet18', 'resnet34']
+        self.variant = 'res_proj'   # choices=['default', 'img_proj', 'res_proj', 'no_joint_conv']
+        self.arch = 'resnet18'     # choices=['vgg11', 'resnet18', 'resnet34']
         self.dataset = 'wildtrack' # choices=['wildtrack', 'multiviewx']
         self.num_workers = 4
         self.batch_size = 1        # input batch size for training (default: 1)

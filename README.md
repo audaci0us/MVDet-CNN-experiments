@@ -26,6 +26,9 @@ With the intention of learning, I'm trying out different things here. Hoping to 
 - [Experiment 2](#experiment-2)
     * [Trials attempted in exp 2](#trials-attempted-in-exp-2)
     * [Changes carried out in exp 2](#changes-carried-out-in-exp-2)
+- [Experiment 3](#experiment-3)
+    * [Trials attempted in exp 3](#trials-attempted-in-exp-3)
+    * [Changes carried out in exp 3](#changes-carried-out-in-exp-3)
 
 
 ## Original setup
@@ -65,10 +68,26 @@ This experiment is only to get some basic familiarity with the code logics.
 
 ## Experiment 2
 This one is a work in progress. Will be committing the changes soon. I've tried to modify the architecture to add an additional model in between the single-view results and the multi-view aggregation layers. These modifications will primarily be in "res_proj_variant". Hoping to complete them soon and commit them here. Fingers crossed!!
-![alt text](https://hou-yz.github.io/images/eccv2020_mvdet_architecture.png "Architecture for MVDet")
+
 
 ### Trials attempted in exp 2
-\*\*\* Work in progress \*\*\*
+1. The existing architecture has multiple variants. One such variant passes the result of the single-view detection, on to the next steps instead of the feature mappings. Refer image below where the red-line highlights the alternative path in this variant. I've modified the CNN model (CNN block highlighted in red as well) used in this alternate pathway here. The idea was to understand what it takes to integrate other single-view CNN models into this architecture.
+![alt text](./models/MVDet - modified architecture - exp2.png "Modified Architecture for MVDet")
 
 ### Changes carried out in exp 2
+1. The model definition in the `__init__` method of the `ResProjVariant` class in the "res_proj_variant.py" script was modified. The `self.image_classifier` property was modified to include an additional resnet18 CNN block in its middle.
+2. In order to integrate this ResNet18 model inside this block, the kernel size of the first CNN layer was converted to `kernel_size=1`, so that the channel size can be suitably adjusted for the input of ResNet18 block.
+3. The last few layers of the ResNet18 block added was omitted, in order to avoid flattening the layers. This way it will remain suitable for the next steps. Ideally, some of the first few layers should also be omitted so that the channel size need not be drastically reduced in order to input here (reduced 512 channels to 3 channels). May be in one of the future experiments.
+
+
+
+
+## Experiment 3
+This one is a work in progress. Will be committing the changes soon. I'll try to make changes that avoid the drastic reduction in the channels count, when modified for the experiment-2 above. These modifications will primarily be in "res_proj_variant" as well. Hoping to complete them soon and commit them here. Fingers crossed!!
+![alt text](https://hou-yz.github.io/images/eccv2020_mvdet_architecture.png "Architecture for MVDet")
+
+### Trials attempted in exp 3
+\*\*\* Work in progress \*\*\*
+
+### Changes carried out in exp 3
 \*\*\* Work in progress \*\*\*
